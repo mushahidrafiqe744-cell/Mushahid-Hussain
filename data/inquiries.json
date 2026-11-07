@@ -1,0 +1,29 @@
+[
+  {
+    "id": "inq_1791198028340",
+    "name": "Alex Smith",
+    "email": "alex.smith@company.com",
+    "phone": "",
+    "projectType": "Frontend (React/Next.js)",
+    "budget": "$1,000 - $3,000",
+    "message": "Looking for a high performance modern web app with clean animations.",
+    "timestamp": "2026-10-05T11:00:28.340Z",
+    "dateFormatted": "Oct 5, 2026, 11:00 AM",
+    "device": "Desktop Browser",
+    "ip": "127.0.0.1",
+    "status": "new"
+  },
+  {
+    "id": "inq_1001",
+    "name": "Sarah Jenkins",
+    "email": "sarah.jenkins.hr@gmail.com",
+    "projectType": "Frontend (React/Next.js)",
+    "budget": "$3,000 - $7,000",
+    "message": "Looking for a senior React/TypeScript engineer for building a high-performance customer dashboard.",
+    "timestamp": "2026-10-04T11:00:22.156Z",
+    "dateFormatted": "Oct 4, 2026, 03:30 PM",
+    "device": "Desktop Browser",
+    "ip": "127.0.0.1",
+    "status": "new"
+  }
+]

@@ -1,0 +1,88 @@
+[
+  {
+    "id": "chat_1791466548828_n8i7sa",
+    "clientName": "Ali Khan",
+    "clientEmail": "ali@example.com",
+    "clientDevice": "Desktop",
+    "clientIp": "127.0.0.1",
+    "createdAt": "2026-10-08T13:35:48.829Z",
+    "updatedAt": "2026-10-08T13:36:05.726Z",
+    "clientOnline": true,
+    "ownerTyping": false,
+    "clientTyping": false,
+    "unreadByOwner": 1,
+    "unreadByClient": 2,
+    "messages": [
+      {
+        "id": "msg_welcome_1791466548862",
+        "sender": "owner",
+        "senderName": "Mushahid Hussain",
+        "text": "👋 Hi! Welcome to my portfolio. How can I help you?",
+        "timestamp": "2026-10-08T13:35:48.829Z",
+        "timeFormatted": "01:35 PM",
+        "read": false
+      },
+      {
+        "id": "msg_1791466558727_9vhaa",
+        "sender": "client",
+        "senderName": "Ali Khan",
+        "text": "I need a website for my e-commerce store",
+        "timestamp": "2026-10-08T13:35:58.727Z",
+        "timeFormatted": "01:35 PM",
+        "read": false
+      },
+      {
+        "id": "msg_1791466565726_87wvi",
+        "sender": "owner",
+        "senderName": "Mushahid Hussain",
+        "text": "Hi Ali! I would love to build your e-commerce store with Next.js and Stripe.",
+        "timestamp": "2026-10-08T13:36:05.726Z",
+        "timeFormatted": "01:36 PM",
+        "read": false
+      }
+    ]
+  },
+  {
+    "id": "chat_sample_101",
+    "clientName": "Sarah Jenkins",
+    "clientEmail": "sarah.jenkins.hr@gmail.com",
+    "clientDevice": "Desktop (Chrome)",
+    "clientIp": "127.0.0.1",
+    "createdAt": "2026-10-08T09:35:44.066Z",
+    "updatedAt": "2026-10-08T10:05:44.067Z",
+    "clientOnline": false,
+    "ownerTyping": false,
+    "clientTyping": false,
+    "unreadByOwner": 0,
+    "unreadByClient": 0,
+    "messages": [
+      {
+        "id": "msg_seed_1",
+        "sender": "client",
+        "senderName": "Sarah Jenkins",
+        "text": "Hi Mushahid! We have an enterprise Next.js dashboard project and loved your portfolio.",
+        "timestamp": "2026-10-08T09:35:44.067Z",
+        "timeFormatted": "02:30 PM",
+        "read": true
+      },
+      {
+        "id": "msg_seed_2",
+        "sender": "owner",
+        "senderName": "Mushahid Hussain",
+        "text": "👋 Hi Sarah! Thank you for reaching out. I would love to hear more about your dashboard requirements and timeline.",
+        "timestamp": "2026-10-08T09:47:44.067Z",
+        "timeFormatted": "02:35 PM",
+        "read": true
+      },
+      {
+        "id": "msg_seed_3",
+        "sender": "client",
+        "senderName": "Sarah Jenkins",
+        "text": "Awesome, we will review your CV and set up a consultation call shortly!",
+        "timestamp": "2026-10-08T10:05:44.067Z",
+        "timeFormatted": "02:40 PM",
+        "read": true
+      }
+    ]
+  }
+]

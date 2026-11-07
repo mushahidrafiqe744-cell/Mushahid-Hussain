@@ -1,11 +1,17 @@
-<div align="center">
+# Mushahid Developer Toolkit
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A premium, Apple-inspired developer toolkit application.
 
-  <h1>Built with AI Studio</h2>
+## Setup
+1. Install dependencies: `npm install`
+2. Start development server: `npm run dev`
+3. Build for production: `npm run build`
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Features
+- Snippet Manager
+- Personal Notes
+- Project Links Manager
+- Developer Resources
+- Settings
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+Built with React, TypeScript, and Vite.

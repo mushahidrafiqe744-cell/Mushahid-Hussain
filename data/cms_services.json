@@ -1,0 +1,50 @@
+[
+  {
+    "id": "frontend",
+    "title": "Frontend Engineering",
+    "description": "Pixel-perfect, accessible, and fast web UIs using React, Next.js, TypeScript, and modern CSS.",
+    "icon": "Layout"
+  },
+  {
+    "id": "fullstack",
+    "title": "Full-Stack Web Apps",
+    "description": "End-to-end web applications with robust server architecture, auth, and database persistence.",
+    "icon": "Layers"
+  },
+  {
+    "id": "api",
+    "title": "REST & GraphQL APIs",
+    "description": "High-throughput, secure backend APIs designed with Express, Node.js, and clean middleware.",
+    "icon": "Server"
+  },
+  {
+    "id": "database",
+    "title": "Database Architecture",
+    "description": "Schema modeling, indexing, and data security using PostgreSQL, Prisma, Supabase, and MongoDB.",
+    "icon": "Database"
+  },
+  {
+    "id": "performance",
+    "title": "Speed & SEO Optimization",
+    "description": "Lighthouse 95+ scores, Core Web Vitals tuning, dynamic meta tags, and high search visibility.",
+    "icon": "Zap"
+  },
+  {
+    "id": "responsive",
+    "title": "Responsive & Mobile UI",
+    "description": "Fluid, cross-browser responsive interfaces tailored seamlessly for mobile, tablet, and desktop.",
+    "icon": "Smartphone"
+  },
+  {
+    "id": "ecommerce",
+    "title": "E-Commerce Platforms",
+    "description": "Custom headless storefronts, Stripe checkout flows, inventory syncing, and high conversion design.",
+    "icon": "ShoppingBag"
+  },
+  {
+    "id": "ai-integration",
+    "title": "AI & Cloud Integration",
+    "description": "Integrating intelligent LLM features, workflow automation, and cloud deployments on Vercel & AWS.",
+    "icon": "Cpu"
+  }
+]

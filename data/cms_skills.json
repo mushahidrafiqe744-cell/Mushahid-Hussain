@@ -1,0 +1,58 @@
+[
+  {
+    "id": "skill_1",
+    "name": "React 19 & Next.js 15",
+    "percentage": 96,
+    "category": "Core Tech Stack",
+    "icon": "Code"
+  },
+  {
+    "id": "skill_2",
+    "name": "TypeScript & JavaScript (ES6+)",
+    "percentage": 95,
+    "category": "Core Tech Stack",
+    "icon": "FileCode"
+  },
+  {
+    "id": "skill_3",
+    "name": "Tailwind CSS & Modern UI",
+    "percentage": 98,
+    "category": "Frontend & Styling",
+    "icon": "Palette"
+  },
+  {
+    "id": "skill_4",
+    "name": "Node.js & Express APIs",
+    "percentage": 92,
+    "category": "Backend & APIs",
+    "icon": "Server"
+  },
+  {
+    "id": "skill_5",
+    "name": "PostgreSQL, Supabase & MongoDB",
+    "percentage": 90,
+    "category": "Database & Cloud",
+    "icon": "Database"
+  },
+  {
+    "id": "skill_6",
+    "name": "REST & GraphQL API Architecture",
+    "percentage": 93,
+    "category": "Backend & APIs",
+    "icon": "Layers"
+  },
+  {
+    "id": "skill_7",
+    "name": "Realtime WebSockets & Socket.io",
+    "percentage": 88,
+    "category": "Backend & APIs",
+    "icon": "Zap"
+  },
+  {
+    "id": "skill_8",
+    "name": "Git, GitHub & CI/CD Pipelines",
+    "percentage": 92,
+    "category": "DevOps & Tools",
+    "icon": "FolderGit2"
+  }
+]

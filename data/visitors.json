@@ -1,0 +1,50 @@
+[
+  {
+    "id": "v_1791027371147_dukgc",
+    "name": "Test User",
+    "email": "testuser@gmail.com",
+    "company": "Acme Corp",
+    "purpose": "Hiring / Web Project Consultation",
+    "timestamp": "2026-10-03T11:36:11.147Z",
+    "dateStr": "Oct 3, 2026, 11:36 AM",
+    "device": "Desktop Browser",
+    "location": "Verified Visitor",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "v_seed_1",
+    "name": "Alexander Wright",
+    "email": "alex.wright.tech@gmail.com",
+    "company": "VentureScale Global",
+    "purpose": "Hiring / Web Project Consultation",
+    "timestamp": "2026-10-03T09:35:59.559Z",
+    "dateStr": "Oct 3, 2026, 02:15 PM",
+    "device": "Desktop Browser (Chrome)",
+    "location": "Islamabad, Pakistan",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "v_seed_2",
+    "name": "Farhan Tariq",
+    "email": "farhan.tariq99@gmail.com",
+    "company": "InnovateX Media",
+    "purpose": "Freelance / SaaS Development Inquiry",
+    "timestamp": "2026-10-03T05:35:59.559Z",
+    "dateStr": "Oct 3, 2026, 11:30 AM",
+    "device": "Mobile (Safari)",
+    "location": "Lahore, Pakistan",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "v_seed_3",
+    "name": "Sarah Jenkins",
+    "email": "sarah.jenkins.hr@gmail.com",
+    "company": "Apex Talent Recruitment",
+    "purpose": "Recruiter / Full-time Job Opportunity",
+    "timestamp": "2026-10-02T11:35:59.559Z",
+    "dateStr": "Oct 2, 2026, 04:45 PM",
+    "device": "Desktop (macOS)",
+    "location": "London, UK",
+    "ip": "127.0.0.1"
+  }
+]

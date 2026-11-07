@@ -1,0 +1,26 @@
+[
+  {
+    "id": "profile_1",
+    "name": "Mushahid Hussain",
+    "firstName": "Mushahid",
+    "lastName": "Hussain",
+    "title": "Web Developer",
+    "scriptSubhead": "Web Developer & Engineer",
+    "badge": "CRAFTING SCALABLE & INTUITIVE WEB EXPERIENCES.",
+    "bioHero": "I build high-performance web applications, responsive interfaces, and robust backend services that help businesses innovate and leave a lasting impression.",
+    "bioAbout": "I am a passionate Full-Stack Web Developer specializing in modern React ecosystems, TypeScript, Node.js, Next.js, and high-converting responsive interfaces. My focus is writing clean, scalable, and maintainable code that delivers outstanding user experiences and business results.",
+    "dob": "06th August 2016",
+    "location": "Pakistan",
+    "email": "mushahidrafiqe744@gmail.com",
+    "phone": "03290725117",
+    "whatsapp": "03290725117",
+    "github": "https://github.com/mushahidhussain",
+    "linkedin": "https://www.linkedin.com/in/mushahid-rafiqe-5b3259425/",
+    "tiktok": "https://www.tiktok.com/@mushahidrafiqe699",
+    "twitter": "https://twitter.com/mushahiddev",
+    "avatarUrl": "/assets/images/mushahid_admin_profile.jpg",
+    "yearsOfExperience": "8+ Years",
+    "projectsCompleted": "50+",
+    "happyClients": "99%"
+  }
+]
