@@ -152,6 +152,22 @@ const getFallbackData = (table: string) => {
       { id: '00000000-0000-0000-0000-000000000004', type: 'pillar', title: 'Creative Architecture', subtitle: 'Clean & Scalable Code', description: 'Writing maintainable, modular TypeScript.', icon: 'Lightbulb', displayOrder: 0 },
       { id: '00000000-0000-0000-0000-000000000005', type: 'workflow', title: 'Discovery & Scope', description: 'Understanding your goals.', stepNumber: 1, displayOrder: 10 }
     ];
+  } else if (table === 'finalized_deals') {
+    initial = [
+      {
+        id: 'deal_demo_1',
+        clientName: 'Alex Thorne',
+        clientEmail: 'alex.thorne@techventures.io',
+        whatsapp: '+1 (555) 234-5678',
+        projectType: 'E-Commerce Store',
+        requirements: 'Custom Next.js store with Stripe checkout & custom product catalog.',
+        estimatedBudget: '$1,500 / PKR 350,000',
+        projectTimeline: '2-3 Weeks',
+        chatSummary: 'Client asked about ecommerce development. Confirmed scope, budget, and starting next week.',
+        dealStatus: 'FINALIZED',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ];
   }
 
   return initial;
@@ -219,6 +235,14 @@ const mapDbToFrontend = (item: any) => {
     badgeUrl: item.badge_url || item.badgeUrl || '',
     credentialBadge: item.credential_badge || item.credentialBadge || '',
     stepNumber: item.step_number ?? item.stepNumber ?? 1,
+    clientName: item.client_name || item.clientName || 'Visitor',
+    clientEmail: item.client_email || item.clientEmail || '',
+    whatsapp: item.whatsapp || item.phone || '',
+    requirements: item.requirements || '',
+    estimatedBudget: item.estimated_budget || item.estimatedBudget || '',
+    projectTimeline: item.project_timeline || item.projectTimeline || '',
+    chatSummary: item.chat_summary || item.chatSummary || '',
+    dealStatus: item.deal_status || item.dealStatus || 'FINALIZED',
   };
 };
 
@@ -252,8 +276,19 @@ const preparePayloadForDb = (table: string, data: any) => {
     payload.credential_badge = payload.credential_badge || payload.credentialBadge || '';
   }
 
-  if (table === 'messages') {
+  if (table === 'messages' || table === 'finalized_deals') {
     payload.project_type = payload.project_type || payload.projectType || '';
+  }
+
+  if (table === 'finalized_deals') {
+    payload.client_name = payload.client_name || payload.clientName || 'Visitor';
+    payload.client_email = payload.client_email || payload.clientEmail || '';
+    payload.whatsapp = payload.whatsapp || payload.phone || '';
+    payload.requirements = payload.requirements || '';
+    payload.estimated_budget = payload.estimated_budget || payload.estimatedBudget || '';
+    payload.project_timeline = payload.project_timeline || payload.projectTimeline || '';
+    payload.chat_summary = payload.chat_summary || payload.chatSummary || '';
+    payload.deal_status = payload.deal_status || payload.dealStatus || 'FINALIZED';
   }
 
   if (table === 'profiles') {
@@ -285,7 +320,8 @@ const preparePayloadForDb = (table: string, data: any) => {
     'displayOrder', 'projectType', 'avatarUrl', 'avatarColor', 'avatar', 'scriptSubhead', 'bioHero',
     'bioAbout', 'projectsCompleted', 'yearsOfExperience', 'happyClients', 'themePrimary',
     'themeAccent', 'fontFamily', 'navbarItems', 'faviconUrl', 'institutionUrl', 'badgeImage',
-    'badgeUrl', 'credentialBadge', 'stepNumber'
+    'badgeUrl', 'credentialBadge', 'stepNumber', 'clientName', 'clientEmail', 'estimatedBudget',
+    'projectTimeline', 'chatSummary', 'dealStatus'
   ];
 
   for (const key of camelCaseKeys) {

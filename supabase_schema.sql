@@ -1,8 +1,8 @@
 -- ==============================================================================
--- ULTIMATE SAFE, IDEMPOTENT & STRICT ADMIN-ONLY SUPABASE SQL MIGRATION SCRIPT
--- Copy and paste this script into your Supabase Dashboard -> SQL Editor and click RUN.
--- 100% SAFE: Will NOT delete any existing rows or drop any existing tables.
--- Restricts modification rights STRICTLY to mushahidrafiqe744@gmail.com.
+-- COMPLETE, SECURE & IDEMPOTENT SUPABASE SQL MIGRATION SCRIPT
+-- Creates missing tables, ensures standard columns, enables strict RLS policies,
+-- and restricts write/modify access strictly to mushahidrafiqe744@gmail.com.
+-- Copy and paste this entire script into your Supabase Dashboard -> SQL Editor and click RUN.
 -- ==============================================================================
 
 -- STEP 1: Enable UUID Extension
@@ -151,105 +151,7 @@ CREATE TABLE IF NOT EXISTS why_us (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- STEP 3: Ensure Clean PostgreSQL Standard snake_case Columns Exist
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS script_subhead TEXT DEFAULT 'Web Developer & Engineer';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio_hero TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio_about TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS projects_completed TEXT DEFAULT '50+';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS years_of_experience TEXT DEFAULT '8+';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS happy_clients TEXT DEFAULT '99%';
-
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'saas';
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS category_label TEXT DEFAULT 'Web Application';
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS image_url TEXT;
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS live_url TEXT DEFAULT '#';
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS github_url TEXT DEFAULT '#';
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT true;
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT false;
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS year TEXT DEFAULT '2025';
-
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS project_type TEXT;
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS budget TEXT;
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS country TEXT;
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS currency TEXT;
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'unread';
-
-ALTER TABLE experiences ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE experiences ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
-
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS institution_url TEXT;
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS badge_image TEXT;
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS badge_url TEXT;
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS credential_badge TEXT;
-
-ALTER TABLE why_us ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE why_us ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
-ALTER TABLE why_us ADD COLUMN IF NOT EXISTS step_number INTEGER;
-
-ALTER TABLE skills ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE services ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-
-ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS avatar_url TEXT;
-ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS avatar_color TEXT DEFAULT '#EA580C';
-
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS theme_primary TEXT DEFAULT '#0A3D22';
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS theme_accent TEXT DEFAULT '#50E364';
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS font_family TEXT DEFAULT 'Inter';
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS navbar_items TEXT[] DEFAULT ARRAY['Home', 'About', 'Services', 'Skills', 'Projects', 'Contact'];
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS favicon_url TEXT DEFAULT '/favicon.ico';
-
--- STEP 4: Safe Data Migration (Copies values from quoted camelCase columns into standard snake_case columns if present)
-DO $$ 
-BEGIN
-  -- Projects table
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='imageUrl') THEN
-    EXECUTE 'UPDATE projects SET image_url = COALESCE(image_url, "imageUrl") WHERE image_url IS NULL AND "imageUrl" IS NOT NULL;';
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='categoryLabel') THEN
-    EXECUTE 'UPDATE projects SET category_label = COALESCE(category_label, "categoryLabel") WHERE category_label IS NULL AND "categoryLabel" IS NOT NULL;';
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='liveUrl') THEN
-    EXECUTE 'UPDATE projects SET live_url = COALESCE(live_url, "liveUrl") WHERE live_url IS NULL AND "liveUrl" IS NOT NULL;';
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='githubUrl') THEN
-    EXECUTE 'UPDATE projects SET github_url = COALESCE(github_url, "githubUrl") WHERE github_url IS NULL AND "githubUrl" IS NOT NULL;';
-  END IF;
-
-  -- Profiles table
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='avatarUrl') THEN
-    EXECUTE 'UPDATE profiles SET avatar_url = COALESCE(avatar_url, "avatarUrl") WHERE avatar_url IS NULL AND "avatarUrl" IS NOT NULL;';
-  END IF;
-
-  -- Experiences table
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='displayOrder') THEN
-    EXECUTE 'UPDATE experiences SET display_order = COALESCE(display_order, "displayOrder") WHERE display_order IS NULL AND "displayOrder" IS NOT NULL;';
-  END IF;
-
-  -- Courses table
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='courses' AND column_name='displayOrder') THEN
-    EXECUTE 'UPDATE courses SET display_order = COALESCE(display_order, "displayOrder") WHERE display_order IS NULL AND "displayOrder" IS NOT NULL;';
-  END IF;
-
-  -- Why Us table
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='why_us' AND column_name='displayOrder') THEN
-    EXECUTE 'UPDATE why_us SET display_order = COALESCE(display_order, "displayOrder") WHERE display_order IS NULL AND "displayOrder" IS NOT NULL;';
-  END IF;
-EXCEPTION WHEN OTHERS THEN
-  NULL;
-END $$;
-
--- STEP 5: Enable Row Level Security (RLS) on all 10 tables
+-- STEP 3: Enable Row Level Security (RLS) on all tables
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
@@ -261,7 +163,7 @@ ALTER TABLE experiences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE why_us ENABLE ROW LEVEL SECURITY;
 
--- STEP 6: Dynamically Drop ALL Existing Permissive Policies on all 10 tables
+-- STEP 4: Drop Existing Policies Safely
 DO $$
 DECLARE
   pol RECORD;
@@ -276,9 +178,9 @@ BEGIN
   END LOOP;
 END $$;
 
--- STEP 7: Re-Create Explicit Strict Policies
+-- STEP 5: Re-Create Strict Secure Policies
 
--- 7A. PORTFOLIO TABLES (9 Tables): Public READ, STRICTLY mushahidrafiqe744@gmail.com Admin MODIFY
+-- 5A. Portfolio & Testimonials Tables: Public READ (SELECT), Admin WRITE (INSERT, UPDATE, DELETE) for mushahidrafiqe744@gmail.com
 DO $$
 DECLARE
   tbl TEXT;
@@ -296,21 +198,23 @@ BEGIN
       'why_us'
     ]::TEXT[])
   LOOP
-    -- Public Full Access Policy (Read & Write for Admin Panel / Frontend)
-    EXECUTE format('CREATE POLICY "Public Full Access Portfolio" ON %I FOR ALL TO anon, authenticated, public USING (true) WITH CHECK (true);', tbl);
+    -- Public Read-Only Policy
+    EXECUTE format('CREATE POLICY "Public Read Portfolio %s" ON %I FOR SELECT TO anon, authenticated, public USING (true);', tbl, tbl);
+    
+    -- Admin Modify Policies (Insert, Update, Delete restricted to admin email or service role)
+    EXECUTE format('CREATE POLICY "Admin Insert Portfolio %s" ON %I FOR INSERT TO authenticated WITH CHECK ((auth.jwt() ->> ''email'') = ''mushahidrafiqe744@gmail.com'' OR auth.role() = ''service_role'');', tbl, tbl);
+    EXECUTE format('CREATE POLICY "Admin Update Portfolio %s" ON %I FOR UPDATE TO authenticated USING ((auth.jwt() ->> ''email'') = ''mushahidrafiqe744@gmail.com'' OR auth.role() = ''service_role'') WITH CHECK ((auth.jwt() ->> ''email'') = ''mushahidrafiqe744@gmail.com'' OR auth.role() = ''service_role'');', tbl, tbl);
+    EXECUTE format('CREATE POLICY "Admin Delete Portfolio %s" ON %I FOR DELETE TO authenticated USING ((auth.jwt() ->> ''email'') = ''mushahidrafiqe744@gmail.com'' OR auth.role() = ''service_role'');', tbl, tbl);
   END LOOP;
 END $$;
 
--- 7B. MESSAGES TABLE: Public Submit (INSERT), STRICTLY mushahidrafiqe744@gmail.com Admin Read/Delete
--- Public Visitors can INSERT contact messages
+-- 5B. Messages Table: Public Submit (INSERT), Admin Read/Delete
 CREATE POLICY "Public Insert Messages" ON messages FOR INSERT TO anon, authenticated WITH CHECK (true);
-
--- ONLY Admin mushahidrafiqe744@gmail.com can SELECT (read), UPDATE, or DELETE messages
 CREATE POLICY "Admin Select Messages" ON messages FOR SELECT TO authenticated USING ((auth.jwt() ->> 'email') = 'mushahidrafiqe744@gmail.com' OR auth.role() = 'service_role');
 CREATE POLICY "Admin Update Messages" ON messages FOR UPDATE TO authenticated USING ((auth.jwt() ->> 'email') = 'mushahidrafiqe744@gmail.com' OR auth.role() = 'service_role') WITH CHECK ((auth.jwt() ->> 'email') = 'mushahidrafiqe744@gmail.com' OR auth.role() = 'service_role');
 CREATE POLICY "Admin Delete Messages" ON messages FOR DELETE TO authenticated USING ((auth.jwt() ->> 'email') = 'mushahidrafiqe744@gmail.com' OR auth.role() = 'service_role');
 
--- STEP 8: Configure Supabase Realtime Publication (Individually per table for complete fault-tolerance)
+-- STEP 6: Configure Supabase Realtime Publication
 DO $$
 DECLARE
   tbl TEXT;
@@ -332,14 +236,13 @@ BEGIN
       BEGIN
         EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I;', tbl);
       EXCEPTION WHEN OTHERS THEN
-        -- Ignore if table is already a member of publication
         NULL;
       END;
     END LOOP;
   END IF;
 END $$;
 
--- STEP 9: Seed Initial Profile Record (If not already present)
+-- STEP 7: Seed Initial Profile Record
 INSERT INTO profiles (id, name, title, email, phone, whatsapp, avatar_url, projects_completed, years_of_experience, happy_clients)
 VALUES (
   '00000000-0000-0000-0000-000000000001',

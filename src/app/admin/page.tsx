@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { AdminLogin } from '../../components/Admin/AdminLogin';
 import { DashboardLayout } from '../../components/Admin/DashboardLayout';
@@ -14,6 +16,7 @@ import { ManageExperience } from '../../components/Admin/ManageExperience';
 import { ManageCourses } from '../../components/Admin/ManageCourses';
 import { ManageWhyUs } from '../../components/Admin/ManageWhyUs';
 import { ManageMessages } from '../../components/Admin/ManageMessages';
+import { ManageFinalizedDeals } from '../../components/Admin/ManageFinalizedDeals';
 import { AdminOverview } from '../../components/Admin/AdminOverview';
 import { supabase } from '../../lib/supabase';
 
@@ -54,6 +57,8 @@ export default function AdminPage() {
     switch (activeTab) {
       case 'overview':
         return <AdminOverview onNavigate={(tab) => setActiveTab(tab)} />;
+      case 'finalized_deals':
+        return <ManageFinalizedDeals />;
       case 'hero':
         return <ManageHero />;
       case 'about':

@@ -8,20 +8,15 @@ import {
   Smile,
   Volume2,
   VolumeX,
-  Shield,
   CheckCheck,
   Check,
-  ArrowRight,
-  Maximize2,
-  Minimize2,
-  Lock,
   User,
-  Image as ImageIcon,
-  ExternalLink
+  Lock,
 } from 'lucide-react';
 import { DeveloperProfile } from '../types/portfolio';
-import { ChatMessage, ChatConversation } from '../types/chat';
+import { ChatMessage } from '../types/chat';
 import { chatSound } from '../services/chatSound';
+import { cmsService } from '../services/cms';
 
 interface LiveChatWidgetProps {
   profile: DeveloperProfile;
@@ -37,22 +32,42 @@ const QUICK_ACTIONS = [
 
 const POPULAR_EMOJIS = ['👋', '💻', '🚀', '🔥', '⚡', '💼', '👍', '✨', '🎯', '📱', '🙌', '🤝'];
 
+const INITIAL_WELCOME_MESSAGE: ChatMessage = {
+  id: 'welcome_1',
+  sender: 'owner',
+  senderName: 'Mushahid Hussain AI',
+  text: "👋 Hi there! Welcome to Mushahid Hussain's portfolio. How can I help you today? Ask me about web development services, past projects, pricing, or request a custom quote!",
+  timestamp: new Date().toISOString(),
+  timeFormatted: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+  read: true,
+};
+
 export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
   profile,
   onOpenOwnerPanel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
   const [clientName, setClientName] = useState<string>('');
   const [clientEmail, setClientEmail] = useState<string>('');
   const [showIdentityForm, setShowIdentityForm] = useState<boolean>(false);
 
-  const [conversation, setConversation] = useState<ChatConversation | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('portfolio_chat_messages');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+    }
+    return [INITIAL_WELCOME_MESSAGE];
+  });
+
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOwnerTyping, setIsOwnerTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [selectedImageModal, setSelectedImageModal] = useState<string | null>(null);
@@ -65,16 +80,12 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const typingTimeoutRef = useRef<number | null>(null);
+  const dealFinalizedRef = useRef<boolean>(false);
 
+  // Load stored preferences & sound mute state
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const savedId = localStorage.getItem('portfolio_chat_session_id');
-      const activeId = savedId || `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      localStorage.setItem('portfolio_chat_session_id', activeId);
-      setSessionId(activeId);
-
       const savedName = localStorage.getItem('portfolio_chat_client_name') || '';
       const savedEmail = localStorage.getItem('portfolio_chat_client_email') || '';
       setClientName(savedName);
@@ -84,146 +95,25 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
     } catch (e) {}
   }, []);
 
-  // Initialize or fetch conversation
+  // Save messages to sessionStorage
   useEffect(() => {
-    if (!sessionId) return;
-    const initChat = async () => {
-      try {
-        const res = await fetch('/api/chat/init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            clientName,
-            clientEmail,
-          }),
-        });
-        const data = await res.json();
-        if (data.success && data.conversation) {
-          setConversation(data.conversation);
-          setMessages(data.conversation.messages || []);
-          if (data.sessionId && data.sessionId !== sessionId) {
-            setSessionId(data.sessionId);
-            localStorage.setItem('portfolio_chat_session_id', data.sessionId);
-          }
-          if (!isOpen && data.conversation.unreadByClient > 0) {
-            setUnreadCount(data.conversation.unreadByClient);
-          }
-        }
-      } catch (err) {
-        console.warn('Chat init network note:', err);
-      }
-    };
-
-    initChat();
-  }, [sessionId]);
-
-  // Connect to Real-Time SSE Stream with polling fallback
-  useEffect(() => {
-    let eventSource: EventSource | null = null;
-    let pollInterval: number | null = null;
-
-    const syncMessagesDirect = async () => {
-      try {
-        const res = await fetch(`/api/chat/conversations/${sessionId}`);
-        const data = await res.json();
-        if (data.success && data.conversation) {
-          setMessages(data.conversation.messages || []);
-          setIsOwnerTyping(Boolean(data.conversation.ownerTyping));
-          if (!isOpen && data.conversation.unreadByClient > 0) {
-            setUnreadCount(data.conversation.unreadByClient);
-          }
-        }
-      } catch (err) {}
-    };
-
+    if (typeof window === 'undefined') return;
     try {
-      eventSource = new EventSource(`/api/chat/stream?sessionId=${sessionId}`);
+      sessionStorage.setItem('portfolio_chat_messages', JSON.stringify(messages));
+    } catch (e) {}
+  }, [messages]);
 
-      eventSource.addEventListener('new_message', (e: any) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data.sessionId === sessionId && data.message) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === data.message.id)) return prev;
-              return [...prev, data.message];
-            });
-
-            // If message came from owner
-            if (data.message.sender === 'owner') {
-              setIsOwnerTyping(false);
-              chatSound.playNotification();
-
-              if (!isOpen) {
-                setUnreadCount((c) => c + 1);
-              } else {
-                // Auto mark read if chat is currently open
-                fetch(`/api/chat/read/${sessionId}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ reader: 'client' }),
-                }).catch(() => {});
-              }
-            }
-          }
-        } catch (err) {}
-      });
-
-      eventSource.addEventListener('typing', (e: any) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data.sessionId === sessionId && data.who === 'owner') {
-            setIsOwnerTyping(Boolean(data.isTyping));
-          }
-        } catch (err) {}
-      });
-
-      eventSource.addEventListener('read_receipt', (e: any) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data.sessionId === sessionId && data.reader === 'owner') {
-            setMessages((prev) =>
-              prev.map((m) => (m.sender === 'client' ? { ...m, read: true } : m))
-            );
-          }
-        } catch (err) {}
-      });
-
-      eventSource.onerror = () => {
-        // Fallback polling if SSE is interrupted
-        if (!pollInterval) {
-          pollInterval = window.setInterval(syncMessagesDirect, 3000);
-        }
-      };
-    } catch (e) {
-      pollInterval = window.setInterval(syncMessagesDirect, 3000);
-    }
-
-    return () => {
-      if (eventSource) eventSource.close();
-      if (pollInterval) clearInterval(pollInterval);
-    };
-  }, [sessionId, isOpen]);
-
-  // Auto-scroll to bottom whenever messages update
+  // Auto-scroll to bottom whenever messages update or AI typing changes
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOwnerTyping, isOpen]);
+  }, [messages, isAiTyping, isOpen]);
 
-  // Mark read when user opens the widget
+  // Open Chat Widget
   const handleOpenWidget = () => {
     setIsOpen(true);
     setUnreadCount(0);
-    try {
-      fetch(`/api/chat/read/${sessionId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reader: 'client' }),
-      }).catch(() => {});
-    } catch (e) {}
-
     setTimeout(() => {
       inputRef.current?.focus();
     }, 200);
@@ -234,77 +124,109 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
     setShowEmojiPicker(false);
   };
 
-  // Typing indicator broadcast
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-
-    // Notify backend that client is typing
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    fetch(`/api/chat/typing/${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isTyping: true, who: 'client' }),
-    }).catch(() => {});
-
-    typingTimeoutRef.current = window.setTimeout(() => {
-      fetch(`/api/chat/typing/${sessionId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isTyping: false, who: 'client' }),
-      }).catch(() => {});
-    }, 1500);
-  };
-
-  // Send message
+  // Handle Send Message & Call Gemini AI API
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend !== undefined ? textToSend : inputValue;
     if ((!text || !text.trim()) && !pendingAttachment) return;
 
     const trimmed = (text || '').trim();
-    setIsSending(true);
 
-    const tempMessage: ChatMessage = {
-      id: `temp_${Date.now()}`,
+    const clientMsg: ChatMessage = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       sender: 'client',
       senderName: clientName.trim() || 'Visitor',
       text: trimmed,
       timestamp: new Date().toISOString(),
       timeFormatted: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      read: false,
+      read: true,
       attachment: pendingAttachment || undefined,
     };
 
-    // Optimistic UI update
-    setMessages((prev) => [...prev, tempMessage]);
+    // Update conversation with user message
+    const updatedMessages = [...messages, clientMsg];
+    setMessages(updatedMessages);
     setInputValue('');
     setPendingAttachment(null);
     setShowEmojiPicker(false);
+    setIsSending(true);
+    setIsAiTyping(true);
 
     try {
-      const res = await fetch(`/api/chat/messages/${sessionId}`, {
+      // Format messages history for server-side Gemini API
+      const apiHistory = updatedMessages.map((m) => ({
+        sender: m.sender === 'client' ? 'client' : 'owner',
+        text: m.text,
+      }));
+
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sender: 'client',
-          senderName: clientName.trim() || 'Visitor',
-          text: trimmed,
-          attachment: tempMessage.attachment,
+          message: trimmed,
+          messages: apiHistory,
+          clientInfo: {
+            name: clientName,
+            email: clientEmail,
+          },
         }),
       });
 
       const data = await res.json();
-      if (data.success && data.message) {
-        // Replace temp message with server saved message
-        setMessages((prev) =>
-          prev.map((m) => (m.id === tempMessage.id ? data.message : m))
-        );
+      const aiReplyText =
+        data.text ||
+        data.reply ||
+        "Thank you for your message! Feel free to reach out directly to Mushahid on WhatsApp (+92 329 0725117) or email (mushahidrafiqe744@gmail.com).";
+
+      if (data.dealFinalized && !dealFinalizedRef.current) {
+        dealFinalizedRef.current = true;
+        const dealPayload = {
+          clientName: clientName.trim() || 'Visitor',
+          clientEmail: clientEmail.trim() || '',
+          whatsapp: '',
+          projectType: data.dealMetadata?.projectType || 'Custom Website Development',
+          requirements: data.dealMetadata?.requirements || trimmed,
+          estimatedBudget: data.dealMetadata?.estimatedBudget || 'Quote agreed in chat',
+          projectTimeline: data.dealMetadata?.projectTimeline || 'As agreed',
+          chatSummary: updatedMessages.map((m) => `${m.sender === 'client' ? 'Client' : 'AI'}: ${m.text}`).join('\n'),
+          dealStatus: 'FINALIZED',
+        };
+        cmsService.insertData('finalized_deals', dealPayload).catch((err) => console.warn('CMS Deal Insert Warn:', err));
+      }
+
+      const aiMsg: ChatMessage = {
+        id: `ai_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        sender: 'owner',
+        senderName: 'Mushahid Hussain AI',
+        text: aiReplyText,
+        timestamp: new Date().toISOString(),
+        timeFormatted: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        read: true,
+      };
+
+      setMessages((prev) => [...prev, aiMsg]);
+      chatSound.playNotification();
+
+      if (!isOpen) {
+        setUnreadCount((c) => c + 1);
       }
     } catch (err) {
-      console.error('Failed to dispatch message:', err);
+      console.error('Gemini AI Chat Error:', err);
+      const errorMsg: ChatMessage = {
+        id: `err_${Date.now()}`,
+        sender: 'owner',
+        senderName: 'Mushahid Hussain AI',
+        text: "I'm having a brief connection issue. Please feel free to message Mushahid directly on WhatsApp (+92 329 0725117) or email mushahidrafiqe744@gmail.com!",
+        timestamp: new Date().toISOString(),
+        timeFormatted: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        read: true,
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsSending(false);
-      inputRef.current?.focus();
+      setIsAiTyping(false);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -351,16 +273,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
     localStorage.setItem('portfolio_chat_client_name', clientName.trim());
     localStorage.setItem('portfolio_chat_client_email', clientEmail.trim());
     setShowIdentityForm(false);
-
-    fetch('/api/chat/init', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        clientName: clientName.trim(),
-        clientEmail: clientEmail.trim(),
-      }),
-    }).catch(() => {});
   };
 
   return (
@@ -370,7 +282,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
           ======================================================== */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-auto">
         
-        {/* Floating "New Message" Notification Alert if chat is closed and unread > 0 */}
+        {/* Floating Notification Alert if chat is closed and unread > 0 */}
         {!isOpen && unreadCount > 0 && (
           <div
             onClick={handleOpenWidget}
@@ -388,7 +300,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between text-[11px] font-bold text-[#DFC285]">
                 <span>Mushahid Hussain</span>
-                <span className="text-[10px] text-[#A3B8A8]">New message</span>
+                <span className="text-[10px] text-[#A3B8A8]">New response</span>
               </div>
               <p className="text-xs text-white/95 truncate mt-0.5 font-medium">
                 {messages[messages.length - 1]?.text || '👋 How can I help you today?'}
@@ -404,11 +316,11 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
             className="hidden sm:flex items-center gap-2 mb-2 px-3 py-1.5 rounded-full bg-white/95 text-[#11261B] text-xs font-semibold shadow-lg border border-[#C5A059]/40 cursor-pointer hover:scale-105 transition-all duration-300 animate-bounce"
           >
             <span className="w-2 h-2 rounded-full bg-[#10B981] animate-ping" />
-            <span>Chat with Mushahid</span>
+            <span>Chat with AI Assistant</span>
           </div>
         )}
 
-        {/* Circular Button */}
+        {/* Circular Floating Chat Button */}
         <button
           onClick={isOpen ? handleCloseWidget : handleOpenWidget}
           aria-label={isOpen ? 'Close Live Chat' : 'Open Live Chat'}
@@ -417,7 +329,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
           {/* Animated Ring Ripple */}
           <div className="absolute -inset-1 rounded-full bg-[#10B981]/25 blur-sm opacity-75 group-hover:opacity-100 animate-pulse pointer-events-none" />
 
-          {/* Unread Message Notification Badge */}
+          {/* Unread Badge */}
           {unreadCount > 0 && !isOpen && (
             <div className="absolute -top-1 -right-1 z-10 w-6 h-6 rounded-full bg-[#EF4444] text-white text-[11px] font-black flex items-center justify-center shadow-md animate-pulse border-2 border-white">
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -430,7 +342,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
           ) : (
             <div className="relative">
               <MessageCircle className="w-7 h-7 text-[#DFC285] group-hover:scale-110 transition-transform duration-300" />
-              {/* Online Green Indicator Dot */}
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#10B981] border-2 border-[#11261B]" />
             </div>
           )}
@@ -438,7 +349,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
       </div>
 
       {/* ========================================================
-          2. CHAT WINDOW / MODAL (Opens Smoothly Above Button)
+          2. CHAT WINDOW / MODAL
           ======================================================== */}
       {isOpen && (
         <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-32px)] sm:w-[400px] h-[580px] max-h-[82vh] bg-[#F8F5EE] rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.45)] border border-[#C5A059]/40 flex flex-col overflow-hidden backdrop-blur-xl animate-scale-up">
@@ -447,7 +358,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
           <div className="p-4 bg-gradient-to-r from-[#0C1F15] via-[#11261B] to-[#1A3828] text-white flex items-center justify-between border-b border-[#C5A059]/30 relative z-10 shadow-sm">
             
             <div className="flex items-center gap-3">
-              {/* Profile Avatar with pulsating online badge */}
+              {/* Profile Avatar */}
               <div className="relative">
                 <img
                   src={profile.avatarUrl}
@@ -457,37 +368,37 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                 <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#10B981] border-2 border-[#11261B] shadow-xs animate-pulse" />
               </div>
 
-              {/* Name & Role & Status */}
+              {/* Name & Role */}
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-display font-bold text-sm sm:text-base text-white tracking-wide">
                     Mushahid Hussain
                   </h3>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#DFC285]" />
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[#A3B8A8]">
-                  <span className="font-semibold text-[#DFC285]">Web Developer</span>
+                  <span className="font-semibold text-[#DFC285]">AI Developer Assistant</span>
                   <span>•</span>
                   <span className="text-[#34D399] flex items-center gap-1 font-semibold">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
-                    Online Now
+                    Online
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Header Action Controls */}
+            {/* Header Controls */}
             <div className="flex items-center gap-1 text-[#DFC285]">
               {/* Audio Sound Toggle */}
               <button
                 onClick={toggleSound}
                 className="p-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                title={isMuted ? 'Unmute notification chime' : 'Mute notification chime'}
+                title={isMuted ? 'Unmute sound' : 'Mute sound'}
               >
                 {isMuted ? <VolumeX className="w-4 h-4 text-white/50" /> : <Volume2 className="w-4 h-4 text-[#DFC285]" />}
               </button>
 
-              {/* Client Info Edit */}
+              {/* User Info Edit */}
               <button
                 onClick={() => setShowIdentityForm((prev) => !prev)}
                 className="p-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
@@ -496,27 +407,27 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                 <User className="w-4 h-4 text-[#DFC285]" />
               </button>
 
-              {/* Owner Portal Login Access */}
+              {/* Admin Portal Access */}
               <button
                 onClick={onOpenOwnerPanel}
                 className="p-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                title="Owner / Admin Chat Dashboard"
+                title="Admin Dashboard"
               >
                 <Lock className="w-4 h-4 text-[#DFC285]" />
               </button>
 
-              {/* Minimize Window */}
+              {/* Close Window */}
               <button
                 onClick={handleCloseWidget}
                 className="p-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer ml-1"
-                aria-label="Minimize Chat"
+                aria-label="Close Chat"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* ---------------- CLIENT IDENTITY DRAWER (Optional Name/Email) ---------------- */}
+          {/* ---------------- CLIENT IDENTITY FORM ---------------- */}
           {showIdentityForm && (
             <form
               onSubmit={handleSaveIdentity}
@@ -524,7 +435,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
             >
               <div className="flex items-center justify-between text-[#11261B] font-bold text-[11px] uppercase tracking-wider">
                 <span>Your Information (Optional)</span>
-                <span className="text-[10px] text-[#5C6E61]">Helps me reply to you</span>
+                <span className="text-[10px] text-[#5C6E61]">Helps us stay connected</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -554,14 +465,13 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
           {/* ---------------- MESSAGE HISTORY AREA ---------------- */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-[#FDFBF7] to-[#F5EFEB]">
             
-            {/* Timestamp Divider */}
             <div className="text-center my-1">
               <span className="px-3 py-1 rounded-full bg-black/5 text-[#5C6E61] text-[10px] font-semibold tracking-wider uppercase">
                 Direct Client-to-Developer Chat
               </span>
             </div>
 
-            {/* Messages Loop */}
+            {/* Messages List */}
             {messages.map((msg) => {
               const isMe = msg.sender === 'client';
               return (
@@ -569,7 +479,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                   key={msg.id}
                   className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
                 >
-                  {/* Owner Avatar on Left for Owner Messages */}
                   {!isMe && (
                     <img
                       src={profile.avatarUrl}
@@ -578,7 +487,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                     />
                   )}
 
-                  {/* Message Bubble */}
                   <div className={`max-w-[82%] sm:max-w-[78%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                     
                     <div
@@ -588,7 +496,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                           : 'bg-white text-[#11261B] rounded-bl-xs border border-[#11261B]/10 shadow-xs'
                       }`}
                     >
-                      {/* Attached Image Preview */}
                       {msg.attachment && msg.attachment.type === 'image' && (
                         <div className="mb-2 rounded-xl overflow-hidden border border-black/10 cursor-pointer">
                           <img
@@ -600,7 +507,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                         </div>
                       )}
 
-                      {/* Attached File Download */}
                       {msg.attachment && msg.attachment.type === 'file' && (
                         <a
                           href={msg.attachment.url}
@@ -612,13 +518,11 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                         </a>
                       )}
 
-                      {/* Text content */}
                       {msg.text && (
                         <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                       )}
                     </div>
 
-                    {/* Timestamp & Read Tick */}
                     <div className="flex items-center gap-1 text-[10px] text-[#8A9B8F] mt-1 px-1">
                       <span>{msg.timeFormatted}</span>
                       {isMe && (
@@ -636,8 +540,8 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
               );
             })}
 
-            {/* Owner Live Typing Indicator */}
-            {isOwnerTyping && (
+            {/* AI Generating Response Typing Indicator */}
+            {isAiTyping && (
               <div className="flex items-end gap-2 justify-start animate-fade-in">
                 <img
                   src={profile.avatarUrl}
@@ -648,7 +552,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-bounce" style={{ animationDelay: '300ms' }} />
-                  <span className="text-[11px] text-[#5C6E61] ml-1 font-semibold">Mushahid is typing...</span>
+                  <span className="text-[11px] text-[#5C6E61] ml-1 font-semibold">Generating AI response...</span>
                 </div>
               </div>
             )}
@@ -656,15 +560,16 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* ---------------- QUICK ACTIONS BAR (Only shows if conversation has <= 2 messages) ---------------- */}
-          {messages.length <= 2 && (
-            <div className="p-2.5 bg-white/80 border-t border-[#11261B]/10 overflow-x-auto flex gap-1.5 shrink-0 scrollbar-none">
+          {/* ---------------- QUICK SUGGESTIONS BAR ---------------- */}
+          {messages.length <= 3 && (
+            <div className="p-2.5 bg-white/90 border-t border-[#11261B]/10 overflow-x-auto flex gap-1.5 shrink-0 scrollbar-none">
               {QUICK_ACTIONS.map((action) => (
                 <button
                   key={action}
                   type="button"
+                  disabled={isSending}
                   onClick={() => handleSendMessage(action)}
-                  className="px-2.5 py-1 rounded-full bg-[#F8F5EE] hover:bg-[#11261B] hover:text-[#DFC285] text-[#11261B] border border-[#11261B]/10 text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 shadow-2xs"
+                  className="px-3 py-1.5 rounded-full bg-[#F8F5EE] hover:bg-[#11261B] hover:text-[#DFC285] text-[#11261B] border border-[#11261B]/15 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   {action}
                 </button>
@@ -692,7 +597,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
             </div>
           )}
 
-          {/* ---------------- ATTACHMENT PREVIEW CHIP ---------------- */}
+          {/* ---------------- ATTACHMENT PREVIEW ---------------- */}
           {pendingAttachment && (
             <div className="px-3 py-1.5 bg-[#DFC285]/20 border-t border-[#C5A059]/40 flex items-center justify-between text-xs text-[#11261B]">
               <div className="flex items-center gap-2 truncate">
@@ -711,7 +616,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
           {/* ---------------- MESSAGE INPUT FOOTER ---------------- */}
           <div className="p-3 bg-white border-t border-[#11261B]/10 flex items-center gap-2 relative">
             
-            {/* Attachment Button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -728,7 +632,6 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
               accept="image/*,.pdf,.doc,.docx,.txt"
             />
 
-            {/* Emoji Button */}
             <button
               type="button"
               onClick={() => setShowEmojiPicker((prev) => !prev)}
@@ -738,18 +641,16 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
               <Smile className="w-4 h-4" />
             </button>
 
-            {/* Input Box */}
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
-              onChange={handleInputChange}
+              onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
               className="flex-1 px-3.5 py-2.5 text-xs sm:text-sm bg-[#F8F5EE] border border-[#11261B]/15 rounded-2xl text-[#11261B] placeholder-[#5C6E61]/60 focus:outline-hidden focus:border-[#C5A059] focus:bg-white transition-all shadow-2xs"
             />
 
-            {/* Send Button */}
             <button
               type="button"
               disabled={isSending || (!inputValue.trim() && !pendingAttachment)}
@@ -764,9 +665,7 @@ export const LiveChatWidget: React.FC<LiveChatWidgetProps> = ({
         </div>
       )}
 
-      {/* ========================================================
-          3. FULL IMAGE PREVIEW MODAL
-          ======================================================== */}
+      {/* FULL IMAGE PREVIEW MODAL */}
       {selectedImageModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"

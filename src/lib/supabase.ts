@@ -1,32 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Robust lookup for Supabase credentials (Vite env, define replacement, or fallback)
-const getEnv = (key: string): string => {
-  try {
-    return (process.env[key] as string) || '';
-  } catch (e) {
-    return '';
-  }
-};
-
 const DEFAULT_SUPABASE_URL = 'https://mmfbelknbomaoqnlvdgu.supabase.co';
 const DEFAULT_SUPABASE_KEY = 'sb_publishable_P7GGPo7KD19rhp1btqrEwA_aGnXoc0B';
 
 const rawUrl = 
-  getEnv('VITE_SUPABASE_URL') || 
-  getEnv('NEXT_PUBLIC_SUPABASE_URL') || 
+  (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_SUPABASE_URL) || 
+  (typeof process !== 'undefined' && process.env && process.env.VITE_SUPABASE_URL) || 
   DEFAULT_SUPABASE_URL;
 
 const rawKey = 
-  getEnv('VITE_SUPABASE_ANON_KEY') || 
-  getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') || 
-  getEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') || 
-  getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') || 
+  (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) || 
+  (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) || 
+  (typeof process !== 'undefined' && process.env && process.env.VITE_SUPABASE_ANON_KEY) || 
+  (typeof process !== 'undefined' && process.env && process.env.VITE_SUPABASE_PUBLISHABLE_KEY) || 
   DEFAULT_SUPABASE_KEY;
 
-// Clean up keys (remove accidental quotes or whitespace)
-const cleanUrl = rawUrl?.trim().replace(/^['"](.*)['"]$/, '$1') || '';
-const cleanKey = rawKey?.trim().replace(/^['"](.*)['"]$/, '$1') || '';
+const cleanUrl = typeof rawUrl === 'string' ? rawUrl.trim().replace(/^['"](.*)['"]$/, '$1') : DEFAULT_SUPABASE_URL;
+const cleanKey = typeof rawKey === 'string' ? rawKey.trim().replace(/^['"](.*)['"]$/, '$1') : DEFAULT_SUPABASE_KEY;
 
 const isValidUrl = (url: string) => {
   try {
@@ -39,9 +29,14 @@ const isValidUrl = (url: string) => {
 
 let supabaseClient = null;
 
-if (cleanUrl && cleanKey && isValidUrl(cleanUrl) && !cleanUrl.includes('YOUR_')) {
+if (cleanUrl && cleanKey && isValidUrl(cleanUrl)) {
   try {
-    supabaseClient = createClient(cleanUrl, cleanKey);
+    supabaseClient = createClient(cleanUrl, cleanKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    });
   } catch (err) {
     console.error('Supabase initialization failed:', err);
   }
@@ -52,4 +47,3 @@ export const supabase = supabaseClient;
 if (!supabase) {
   console.warn('Supabase credentials are missing or invalid URL. Current URL:', cleanUrl || 'Empty');
 }
-

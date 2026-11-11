@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FolderKanban, BookOpen, Layers, User, MessageSquare, Settings, Globe, Award, ExternalLink, LogOut, Lock, Briefcase, GraduationCap, Zap, LayoutGrid } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, BookOpen, Layers, User, MessageSquare, Settings, Globe, Award, ExternalLink, LogOut, Lock, Briefcase, GraduationCap, Zap, LayoutGrid, Handshake } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { cmsService } from '../../services/cms';
 
@@ -54,6 +54,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const navItems = [
     { name: 'Dashboard', key: 'overview', icon: LayoutDashboard },
+    { name: 'Finalized Deals', key: 'finalized_deals', icon: Handshake },
     { name: 'Hero Section', key: 'hero', icon: Globe },
     { name: 'About Me', key: 'about', icon: User },
     { name: 'Projects', key: 'projects', icon: FolderKanban },
