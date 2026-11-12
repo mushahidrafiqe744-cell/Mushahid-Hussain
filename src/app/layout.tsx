@@ -1,10 +1,20 @@
-import React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '../index.css';
+
+export const viewport: Viewport = {
+  themeColor: '#0A3D22',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'Mushahid Hussain - Web Developer Portfolio',
   description: 'Professional Web & Full-Stack Developer portfolio of Mushahid Hussain featuring responsive projects, GitHub repositories, technical skills showcase, interactive resume, and contact channels.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Mushahid Portfolio',
+  },
   openGraph: {
     title: 'Mushahid Hussain - Web Developer Portfolio',
     description: 'Professional Web & Full-Stack Developer portfolio of Mushahid Hussain featuring responsive projects, GitHub repositories, technical skills showcase, interactive resume, and contact channels.',

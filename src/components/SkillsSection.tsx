@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, CheckCircle2 } from 'lucide-react';
+import { Sparkles, CheckCircle2, LayoutGrid, Sliders } from 'lucide-react';
 import { SkillGroup } from '../types/portfolio';
 
 interface SkillItemData {
@@ -51,7 +51,7 @@ const SkillCard: React.FC<{ skill: SkillItemData }> = ({ skill }) => {
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="bg-white p-5 rounded-2xl border border-[#11261B]/10 shadow-xs hover:border-[#C5A059] hover:shadow-xl transition-all duration-500 group cursor-pointer relative overflow-hidden"
+      className="w-[280px] sm:w-[320px] bg-white p-5 rounded-2xl border border-[#11261B]/10 shadow-xs hover:border-[#C5A059] hover:shadow-xl transition-all duration-500 group cursor-pointer relative overflow-hidden shrink-0 mx-3"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -125,6 +125,7 @@ const SkillCard: React.FC<{ skill: SkillItemData }> = ({ skill }) => {
 
 export const SkillsSection: React.FC<SkillsSectionProps> = ({ skillGroups }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'marquee' | 'grid'>('marquee');
 
   // Convert skillGroups into flat detailedSkills
   const detailedSkills: SkillItemData[] = skillGroups.flatMap(group => 
@@ -135,16 +136,15 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skillGroups }) => 
         else if (score >= 80) level = 'Advanced';
         else if (score >= 70) level = 'Proficient';
         
-        // Simple color generation based on name
         const colors = [
-            { bg: '#23272f', color: '#149eca' }, // Dark Blue
-            { bg: '#3178c6', color: '#ffffff' }, // Blue
-            { bg: '#1f2937', color: '#e5e7eb' }, // Gray
-            { bg: '#339933', color: '#ffffff' }, // Green
-            { bg: '#dc382d', color: '#ffffff' }, // Red
-            { bg: '#4169e1', color: '#ffffff' }, // Royal Blue
-            { bg: '#e535ab', color: '#ffffff' }, // Pink
-            { bg: '#38bdf8', color: '#ffffff' }, // Light Blue
+            { bg: '#23272f', color: '#149eca' },
+            { bg: '#3178c6', color: '#ffffff' },
+            { bg: '#1f2937', color: '#e5e7eb' },
+            { bg: '#339933', color: '#ffffff' },
+            { bg: '#dc382d', color: '#ffffff' },
+            { bg: '#4169e1', color: '#ffffff' },
+            { bg: '#e535ab', color: '#ffffff' },
+            { bg: '#38bdf8', color: '#ffffff' },
         ];
         const colorIdx = (item.name.length + item.name.charCodeAt(0)) % colors.length;
         const colorSet = colors[colorIdx];
@@ -178,25 +178,61 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skillGroups }) => 
     (s) => selectedCategory === 'all' || s.category === selectedCategory
   );
 
+  // Partition for Marquee Rows (like testimonials)
+  const row1 = filtered.filter((_, i) => i % 3 === 0);
+  const row2 = filtered.filter((_, i) => i % 3 === 1);
+  const row3 = filtered.filter((_, i) => i % 3 === 2);
+
+  const loopRow1 = [...row1, ...row1, ...row1];
+  const loopRow2 = [...row2, ...row2, ...row2];
+  const loopRow3 = [...row3, ...row3, ...row3];
+
   return (
-    <section id="skills" className="py-20 bg-[#F2EDE2] border-b border-[#11261B]/10 relative">
+    <section id="skills" className="py-20 bg-[#F2EDE2] border-b border-[#11261B]/10 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.25em] uppercase text-[#C5A059] mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.25em] uppercase text-[#C5A059] mb-2 px-3 py-1 rounded-full bg-white border border-[#C5A059]/30">
+            <Sparkles className="w-3.5 h-3.5 animate-spin-slow" />
             <span>TECHNICAL EXPERTISE</span>
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 animate-spin-slow" />
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#11261B] mb-4">
             My Skills & Tech Stack
           </h2>
           <div className="w-16 h-1 bg-[#C5A059] mx-auto mb-4 rounded-full" />
-          <p className="text-[#5C6E61] text-base sm:text-lg leading-relaxed">
-            A battle-tested set of languages, frameworks, libraries, and engineering practices.
+          <p className="text-[#5C6E61] text-base sm:text-lg leading-relaxed mb-6">
+            A battle-tested set of languages, frameworks, libraries, and engineering practices running in continuous view.
           </p>
+
+          {/* View Mode Switcher */}
+          <div className="inline-flex p-1 rounded-xl bg-white border border-gray-200 shadow-2xs">
+            <button
+              onClick={() => setViewMode('marquee')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'marquee'
+                  ? 'bg-[#11261B] text-[#DFC285] shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Running Marquee View</span>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-[#11261B] text-[#DFC285] shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Grid View</span>
+            </button>
+          </div>
         </div>
 
+        {/* Category Filters */}
         <div className="flex items-center justify-center gap-2 mb-10 overflow-x-auto pb-2">
           {categories.map((cat) => (
             <button
@@ -212,13 +248,50 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skillGroups }) => 
             </button>
           ))}
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-16">
-          {filtered.map((skill, index) => (
-            <SkillCard key={`${skill.category}-${skill.name}-${index}`} skill={skill} />
-          ))}
+      {/* Running Marquee Rows (Like Testimonials) */}
+      {viewMode === 'marquee' ? (
+        <div className="w-full space-y-4 py-4 marquee-pause overflow-hidden">
+          {/* Row 1: Scrolling Left */}
+          <div className="flex overflow-hidden">
+            <div className="animate-marquee-left flex py-1">
+              {loopRow1.map((skill, index) => (
+                <SkillCard key={`s1-${index}`} skill={skill} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: Scrolling Right */}
+          <div className="flex overflow-hidden">
+            <div className="animate-marquee-right flex py-1">
+              {loopRow2.map((skill, index) => (
+                <SkillCard key={`s2-${index}`} skill={skill} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 3: Scrolling Left (Slower) */}
+          <div className="flex overflow-hidden">
+            <div className="animate-marquee-left-slow flex py-1">
+              {loopRow3.map((skill, index) => (
+                <SkillCard key={`s3-${index}`} skill={skill} />
+              ))}
+            </div>
+          </div>
         </div>
+      ) : (
+        /* Grid View */
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-16">
+            {filtered.map((skill, index) => (
+              <SkillCard key={`${skill.category}-${skill.name}-${index}`} skill={skill} />
+            ))}
+          </div>
+        </div>
+      )}
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <div className="bg-[#11261B] text-white p-8 sm:p-10 rounded-2xl border border-[#C5A059]/30 shadow-lg relative overflow-hidden">
           <div className="max-w-3xl mb-8">
             <div className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#C5A059] mb-1">
@@ -247,8 +320,8 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skillGroups }) => 
             ))}
           </div>
         </div>
-
       </div>
+
     </section>
   );
 };

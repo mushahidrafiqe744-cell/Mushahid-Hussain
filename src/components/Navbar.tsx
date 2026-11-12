@@ -14,6 +14,7 @@ import { DeveloperProfile, SectionId } from '../types/portfolio';
 import { EmblemLogo } from './EmblemLogo';
 import { TooltipNavbar, TooltipNavbarItem } from './TooltipNavbar';
 import { DiscreteTabs, DiscreteTab } from './DiscreteTabs';
+import { PWAInstallButton } from './PWAInstallButton';
 import { MdWorkOutline, MdPsychology, MdDesignServices, MdChatBubbleOutline, MdRateReview } from 'react-icons/md';
 import { HiOutlineLightBulb } from 'react-icons/hi2';
 import { Star } from 'lucide-react';
@@ -141,6 +142,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
+            <PWAInstallButton />
+
             <a
               href="#resume"
               onClick={(e) => {
